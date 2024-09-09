@@ -16,90 +16,41 @@ typedef struct Board {
 	CellState cells[NUMBEROFCELLS][NUMBEROFCELLS];
 } Board;
 
-bool firstRowFirstCellCollision(Vector2 mousePosition) {
-	return mousePosition.x < 200 && mousePosition.y < 200 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+bool isCellCollision(Vector2 mousePosition, int row, int col) {
+    int cellX = col * CELLSIZE;
+    int cellY = row * CELLSIZE;
+    return mousePosition.x > cellX && mousePosition.x < cellX + CELLSIZE &&
+           mousePosition.y > cellY && mousePosition.y < cellY + CELLSIZE &&
+           IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 }
 
-bool firstRowSecondCellCollision(Vector2 mousePosition) {
-	return mousePosition.x > 200 && mousePosition.x < 400 && mousePosition.y < 200 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+void drawCell(int row, int col, Color color) {
+    int cellX = col * CELLSIZE + CELLSIZE / 2;
+    int cellY = row * CELLSIZE + CELLSIZE / 2;
+    DrawCircle(cellX, cellY, 10, color);
 }
 
-bool firstRowThirdCellCollision(Vector2 mousePosition) {
-	return mousePosition.x > 400 && mousePosition.y < 200 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-}
-
-bool secondRowFirstCellCollision(Vector2 mousePosition) {
-	return mousePosition.x < 200 && mousePosition.y > 200 && mousePosition.y < 400 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-}
-
-bool secondRowSecondCellCollision(Vector2 mousePosition) {
-	return mousePosition.x > 200 && mousePosition.x < 400 && mousePosition.y > 200 && mousePosition.y < 400 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-}
-
-bool secondRowThirdCellCollision(Vector2 mousePosition) {
-	return mousePosition.x > 400 && mousePosition.y > 200 && mousePosition.y < 400 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-}
-
-bool thirdRowFirstCellCollision(Vector2 mousePosition) {
-	return mousePosition.x < 200 && mousePosition.y > 400 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-}
-
-bool thirdRowSecondCellCollision(Vector2 mousePosition) {
-	return mousePosition.x > 200 && mousePosition.x < 400 && mousePosition.y > 400 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-}
-
-bool thirdRowThirdCellCollision(Vector2 mousePosition) {
-	return mousePosition.x > 400 && mousePosition.y > 400 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+void cellColliders(Board* board, Vector2 mousePosition) {
+    for (int row = 0; row < NUMBEROFCELLS; ++row) {
+        for (int col = 0; col < NUMBEROFCELLS; ++col) {
+            if (isCellCollision(mousePosition, row, col)) {
+                drawCell(row, col, RED);
+                board->cells[row][col] = X;
+            }
+        }
+    }
 }
 
 void drawBoard() {
 	// Vertical Lines
-	for (int i = 1; i < 3; ++i) {
-		int x = i * CELLSIZE;
-		DrawRectangle(x, 0, 1, BOARDSIZE, WHITE);
+	for (int i = 1; i < NUMBEROFCELLS; i++) {
+		DrawRectangle(i * CELLSIZE, 0, 1, BOARDSIZE, WHITE);
 	}
 
 	// Horizontal Lines
-	for (int i = 1; i < 3; ++i) {
-		int y = i * CELLSIZE;
-		DrawRectangle(0, y, BOARDSIZE, 1, WHITE);
+	for (int i = 1; i < NUMBEROFCELLS; i++) {
+		DrawRectangle(0, i * CELLSIZE, BOARDSIZE, 1, WHITE);
 	}
-}
-
-void squareColliders(Board* board, Vector2 mousePosition) {
-	// First Row
-	if (firstRowFirstCellCollision(mousePosition)) {
-		DrawCircle(100, 100, 10, RED);  
-	}
-	if (firstRowSecondCellCollision(mousePosition)) {
-		DrawCircle(300, 100, 10, RED);  
-	}
-	if (firstRowThirdCellCollision(mousePosition)) {
-		DrawCircle(500, 100, 10, RED);
-	}
-
-	// Second Row
-	if (secondRowFirstCellCollision(mousePosition)) {
-		DrawCircle(100, 300, 10, RED);
-	}
-	if (secondRowSecondCellCollision(mousePosition)) {
-		DrawCircle(300, 300, 10, RED);
-	}
-	if (secondRowThirdCellCollision(mousePosition)) {
-		DrawCircle(500, 300, 10, RED);
-	}
-
-	// Third Row
-	if (thirdRowFirstCellCollision(mousePosition)) {
-		DrawCircle(100, 500, 10, RED);
-	}
-	if (thirdRowSecondCellCollision(mousePosition)) {
-		DrawCircle(300, 500, 10, RED);
-	}
-	if (thirdRowThirdCellCollision(mousePosition)) {
-		DrawCircle(500, 500, 10, RED);
-	}
-	
 }
 
 int main () {
@@ -124,7 +75,7 @@ int main () {
 	{
 		mousePosition = GetMousePosition();
 
-		squareColliders(&board, mousePosition);
+		cellColliders(&board, mousePosition);
 
 		// drawing
 		BeginDrawing();
