@@ -1,3 +1,12 @@
+/*
+	Still a work in progress
+
+	fix getWinner
+	add title screen, game over screen and restart functionality
+
+	later add multiplayer, will have to code the server
+*/
+
 #include "raylib.h"
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
 #include <stdio.h>
