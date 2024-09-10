@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
@@ -71,6 +72,21 @@ void drawBoard(Board* board) {
 	}
 }
 
+CellState getWinner(Board* board) {
+	for (int i = 0; i < NUMBEROFCELLS; i++) {
+		if (board->cells[i][0] == board->cells[i][1] && board->cells[i][1] == board->cells[i][2]) return board->cells[i][0];
+	}
+
+	for (int i = 0; i < NUMBEROFCELLS; i++) {
+		if (board->cells[0][i] == board->cells[1][i] && board->cells[1][i] == board->cells[2][i]) return board->cells[i][0];
+	}
+
+	if (board->cells[0][0] == board->cells[1][1] && board->cells[1][1] == board->cells[2][2]) return board->cells[0][0];
+	if (board->cells[0][2] == board->cells[1][1] && board->cells[1][1] == board->cells[2][0]) return board->cells[0][2];
+
+	return NONE;
+}
+
 int main () {
 	srand(time(NULL));
 
@@ -92,33 +108,46 @@ int main () {
 	Vector2 mousePosition;
 	int aichoice[2];
 	bool aiTurn = false;
-	
+	CellState winner;
+
+
 	while (!WindowShouldClose())
 	{
-		mousePosition = GetMousePosition();
+		winner = getWinner(&board);
 
-		cellColliders(&board, mousePosition, &aiTurn);
-
-		while (aiTurn) {
-			aichoice[0] = rand() % 3;
-			aichoice[1] = rand() % 3;
-
-			if (board.cells[aichoice[0]][aichoice[1]] == NONE) {
-				board.cells[aichoice[0]][aichoice[1]] = O;
-				aiTurn = false;
-			}
+		if (winner != NONE) {
+			if (winner == X) printf("X wins!\n");
+			else printf("O wins!\n");
+			break;
 		}
+		else {
+			mousePosition = GetMousePosition();
 
-		// drawing
-		BeginDrawing();
+			cellColliders(&board, mousePosition, &aiTurn);
 
-		// Setup the backbuffer for drawing (clear color and depth buffers)
-		ClearBackground(BLACK);
-		
-		drawBoard(&board);
-		
-		// end the frame and get ready for the next one  (display frame, poll input, etc...)
-		EndDrawing();
+			if (aiTurn) {
+				aichoice[0] = rand() % 3;
+				aichoice[1] = rand() % 3;
+
+				printf("Ai row: %d col %d\n", aichoice[0], aichoice[1]);
+
+				if (board.cells[aichoice[0]][aichoice[1]] == NONE) {
+					board.cells[aichoice[0]][aichoice[1]] = O;
+					aiTurn = false;
+				}
+			}
+
+			// drawing
+			BeginDrawing();
+
+			// Setup the backbuffer for drawing (clear color and depth buffers)
+			ClearBackground(BLACK);
+			
+			drawBoard(&board);
+			
+			// end the frame and get ready for the next one  (display frame, poll input, etc...)
+			EndDrawing();
+		}
 	}
 
 	// UnloadTexture(wabbit);
