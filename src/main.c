@@ -1,7 +1,6 @@
 /*
 	Still a work in progress
 
-	fix getWinner
 	add title screen, game over screen and restart functionality
 
 	later add multiplayer, will have to code the server
@@ -17,6 +16,12 @@
 #define BOARDSIZE 600
 #define CELLSIZE 200
 #define NUMBEROFCELLS 3
+
+typedef enum GameState {
+	MAINMENU,
+	PLAY,
+	QUIT
+} GameState;
 
 typedef enum CellState {
 	X,
@@ -87,16 +92,107 @@ CellState getWinner(Board* board) {
 	}
 
 	for (int i = 0; i < NUMBEROFCELLS; i++) {
-		if (board->cells[0][i] == board->cells[1][i] && board->cells[1][i] == board->cells[2][i]) return board->cells[i][0];
+		if (board->cells[0][i] == board->cells[1][i] && board->cells[1][i] == board->cells[2][i]) return board->cells[0][i];
 	}
 
 	if (board->cells[0][0] == board->cells[1][1] && board->cells[1][1] == board->cells[2][2]) return board->cells[0][0];
 	if (board->cells[0][2] == board->cells[1][1] && board->cells[1][1] == board->cells[2][0]) return board->cells[0][2];
 
-	return NONE;
+	return NONE; // draw
+}
+
+bool boardIsFull(Board* board) {
+	for (int i = 0; i < NUMBEROFCELLS; i++) {
+		for (int j = 0; j < NUMBEROFCELLS; j++) {
+			if (board->cells[i][j] == NONE) return false;
+		}
+	}
+
+	return true;
+}
+
+GameState main_menu(Vector2 mousePosition) {
+	Color start_button_color = BLACK;
+	Color start_button_text = WHITE;
+
+	Color quit_button_color = BLACK;
+	Color quit_button_text = WHITE;
+
+	mousePosition = GetMousePosition();
+
+	if (mousePosition.x > 200 && mousePosition.x < 400 && mousePosition.y > 300 && mousePosition.y < 360) {
+		start_button_color = WHITE;
+		start_button_text = GREEN;
+
+		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) return PLAY;
+	}
+	else if (mousePosition.y > 200 && mousePosition.x < 400 && mousePosition.y > 400 && mousePosition.y < 460) {
+		quit_button_color = WHITE;
+		quit_button_text = RED;
+
+		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) return QUIT;
+	}
+	char buffer[100];
+
+	sprintf(buffer, "Mouse X: %.2f, Mouse Y: %.2f", mousePosition.x, mousePosition.y);
+	const char *mousePos = buffer;
+
+	BeginDrawing();
+
+		ClearBackground(BLACK);
+		
+		DrawText("TicTacToe", 190, 200, 40, WHITE);
+
+		DrawRectangle(200, 300, 200, 60, start_button_color); // start button
+		DrawRectangle(200, 400, 200, 60, quit_button_color); // quit
+
+		DrawText("Start", 275, 320, 20, start_button_text);
+		DrawText("Quit", 285, 420, 20, quit_button_text);
+		DrawText(mousePos, 0, 0, 10, WHITE);
+	
+	EndDrawing();
+}
+
+
+void main_game_loop(Board* board, Vector2 mousePosition) {
+	// winner = getWinner(&board);
+
+	// mousePosition = GetMousePosition();
+
+	// cellColliders(&board, mousePosition, &aiTurn);
+
+	// if (aiTurn) {
+	// 	aichoice[0] = rand() % 3;
+	// 	aichoice[1] = rand() % 3;
+
+	// 	printf("Ai row: %d col %d\n", aichoice[0], aichoice[1]);
+
+	// 	if (board.cells[aichoice[0]][aichoice[1]] == NONE) {
+	// 		board.cells[aichoice[0]][aichoice[1]] = O;
+	// 		aiTurn = false;
+	// 	}
+	// }
+
+	// drawing
+	BeginDrawing();
+
+	// Setup the backbuffer for drawing (clear color and depth buffers)
+	ClearBackground(BLACK);
+	
+	drawBoard(board);
+	
+	// end the frame and get ready for the next one  (display frame, poll input, etc...)
+	EndDrawing();
 }
 
 int main () {
+	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+	InitWindow(BOARDSIZE, BOARDSIZE, "TicTacToe");
+	SetTargetFPS(60);
+
+	SearchAndSetResourceDir("resources");
+	// Texture wabbit = LoadTexture("wabbit_alpha.png");
+
 	srand(time(NULL));
 
 	Board board;
@@ -107,55 +203,22 @@ int main () {
         }
     }
 
-	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
-	InitWindow(BOARDSIZE, BOARDSIZE, "TicTacToe");
-	SetTargetFPS(60);
-
-	SearchAndSetResourceDir("resources");
-	// Texture wabbit = LoadTexture("wabbit_alpha.png");
+	GameState state;
 
 	Vector2 mousePosition;
-	int aichoice[2];
-	bool aiTurn = false;
-	CellState winner;
-
 
 	while (!WindowShouldClose())
 	{
-		winner = getWinner(&board);
-
-		if (winner != NONE) {
-			if (winner == X) printf("X wins!\n");
-			else printf("O wins!\n");
-			break;
+		if (state == PLAY) {
+			// start game
+			main_game_loop(&board, mousePosition);
 		}
-		else {
-			mousePosition = GetMousePosition();
-
-			cellColliders(&board, mousePosition, &aiTurn);
-
-			if (aiTurn) {
-				aichoice[0] = rand() % 3;
-				aichoice[1] = rand() % 3;
-
-				printf("Ai row: %d col %d\n", aichoice[0], aichoice[1]);
-
-				if (board.cells[aichoice[0]][aichoice[1]] == NONE) {
-					board.cells[aichoice[0]][aichoice[1]] = O;
-					aiTurn = false;
-				}
-			}
-
-			// drawing
-			BeginDrawing();
-
-			// Setup the backbuffer for drawing (clear color and depth buffers)
-			ClearBackground(BLACK);
-			
-			drawBoard(&board);
-			
-			// end the frame and get ready for the next one  (display frame, poll input, etc...)
-			EndDrawing();
+		else if (state == MAINMENU) {
+			// display main menu
+			state = main_menu(mousePosition);
+		}
+		else if (state == QUIT) {
+			break;
 		}
 	}
 
